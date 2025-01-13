@@ -1,67 +1,145 @@
-import ReactECharts from 'echarts-for-react'
+"use client";
 
-export default function IncomeExpenseChart() {
-  const option = {
-    tooltip: {
-      trigger: 'axis',
-      axisPointer: {
-        type: 'cross',
-        crossStyle: {
-          color: '#999'
-        }
-      }
-    },
-    toolbox: {
-      feature: {
-        dataView: { show: true, readOnly: false },
-        magicType: { show: true, type: ['line', 'bar'] },
-        restore: { show: true },
-        saveAsImage: { show: true }
-      }
-    },
-    legend: {
-      data: ['Income', 'Expenses', 'Net']
-    },
-    xAxis: [
-      {
-        type: 'category',
-        data: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-        axisPointer: {
-          type: 'shadow'
-        }
-      }
-    ],
-    yAxis: [
-      {
-        type: 'value',
-        name: 'Amount',
-        min: 0,
-        max: 10000,
-        interval: 2000,
-        axisLabel: {
-          formatter: '${value}'
-        }
-      }
-    ],
-    series: [
-      {
-        name: 'Income',
-        type: 'bar',
-        data: [5000, 5200, 5500, 5700, 6000, 6200, 6500, 6700, 7000, 7200, 7500, 7700]
-      },
-      {
-        name: 'Expenses',
-        type: 'bar',
-        data: [4000, 4100, 4300, 4500, 4700, 4900, 5100, 5300, 5500, 5700, 5900, 6100]
-      },
-      {
-        name: 'Net',
-        type: 'line',
-        data: [1000, 1100, 1200, 1200, 1300, 1300, 1400, 1400, 1500, 1500, 1600, 1600]
-      }
-    ]
-  }
+import ReactECharts from "echarts-for-react";
+import { useEffect, useState } from "react";
+import axios from "axios";
 
-  return <ReactECharts option={option} style={{ height: '400px' }} />
+interface ChartProps {
+  timeUnit?: "monthly" | "quarterly" | "yearly"; // Tham số để xác định thời gian
 }
 
+export default function IncomeExpenseChart({
+  timeUnit = "monthly",
+}: ChartProps) {
+  const [option, setOption] = useState<any>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+
+  useEffect(() => {
+    const token = localStorage.getItem("accessToken");
+    if (!token) {
+      console.error("No token found. Please login.");
+      return;
+    }
+
+    async function fetchReportData() {
+      try {
+        setLoading(true); // Hiển thị trạng thái loading
+        const response = await axios.get(
+          `http://localhost:3005/api/reports/income-expenses?timeUnit=${timeUnit}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+
+        const data = response.data.data.groupedData;
+        if (!data || typeof data !== "object") {
+          console.error("Data is not available or not an object.");
+          setLoading(false);
+          return;
+        }
+
+        // Trích xuất và sắp xếp nhãn
+        const labels = Object.keys(data).sort((a, b) => {
+          const dateA = new Date(
+            timeUnit === "quarterly" ? a.replace("-Q", "-") : `${a}-01`
+          );
+          const dateB = new Date(
+            timeUnit === "quarterly" ? b.replace("-Q", "-") : `${b}-01`
+          );
+          return dateA.getTime() - dateB.getTime();
+        });
+
+        const incomes = labels.map((label) => data[label].income || 0);
+        const expenses = labels.map((label) => data[label].expense || 0);
+        const nets = labels.map(
+          (label) => (data[label].income || 0) - (data[label].expense || 0)
+        );
+
+        // Cấu hình biểu đồ
+        const newOption = {
+          tooltip: {
+            trigger: "axis",
+            axisPointer: {
+              type: "cross",
+              crossStyle: {
+                color: "#999",
+              },
+            },
+          },
+          toolbox: {
+            feature: {
+              dataView: { show: true, readOnly: false },
+              magicType: { show: true, type: ["line", "bar"] },
+              restore: { show: true },
+              saveAsImage: { show: true },
+            },
+          },
+          legend: {
+            data: ["Income", "Expenses", "Net"],
+          },
+          xAxis: [
+            {
+              type: "category",
+              data: labels,
+              axisPointer: {
+                type: "shadow",
+              },
+              axisLabel: {
+                formatter: (value: string) => {
+                  if (timeUnit === "quarterly") {
+                    return value.replace("-Q", " Q"); // Định dạng "YYYY-Q1" thành "YYYY Q1"
+                  }
+                  return value;
+                },
+              },
+            },
+          ],
+          yAxis: [
+            {
+              type: "value",
+              name: "Amount",
+              axisLabel: {
+                formatter: "${value}",
+              },
+            },
+          ],
+          series: [
+            {
+              name: "Income",
+              type: "bar",
+              data: incomes,
+            },
+            {
+              name: "Expenses",
+              type: "bar",
+              data: expenses,
+            },
+            {
+              name: "Net",
+              type: "line",
+              data: nets,
+            },
+          ],
+        };
+
+        setOption(newOption);
+      } catch (error) {
+        console.error("Error fetching report data:", error);
+      } finally {
+        setLoading(false); // Kết thúc trạng thái loading
+      }
+    }
+
+    fetchReportData();
+  }, [timeUnit]); // Reload dữ liệu khi `timeUnit` thay đổi
+
+  if (loading) {
+    return <div>Loading chart data...</div>;
+  }
+
+  if (!option) {
+    return <div>No data available</div>;
+  }
+
+  return <ReactECharts option={option} style={{ height: "400px" }} />;
+}

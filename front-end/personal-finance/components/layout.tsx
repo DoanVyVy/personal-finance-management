@@ -56,10 +56,6 @@ export default function Layout({ children }: LayoutProps) {
     fetchUser();
   }, []);
 
-  if (loading) {
-    return <div>Loading user info...</div>;
-  }
-
   if (errorMessage) {
     return <div className="p-4 text-red-500">{errorMessage}</div>;
   }
@@ -67,16 +63,13 @@ export default function Layout({ children }: LayoutProps) {
   return (
     <div className="flex min-h-screen">
       <Sidebar />
-      <main className="flex-1 ml-64 p-8 overflow-y-auto">
+      <main className="flex-1 p-8 ml-64 overflow-y-auto">
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-2xl font-semibold">Hi, {userName}</h1>
-            <p className="text-sm text-muted-foreground">
-              2 new notifications, 3 reminders
-            </p>
           </div>
           <Button variant="ghost" size="icon">
-            <BellIcon className="h-5 w-5" />
+            <BellIcon className="w-5 h-5" />
           </Button>
         </div>
         {children}

@@ -2,10 +2,14 @@ require("dotenv").config();
 const express = require("express");
 const bodyParser = require("body-parser");
 const sequelize = require("./config/db");
+const cors = require("cors");
 const categoryRoutes = require("./routes/categoryRoutes");
 const authMiddleware = require("./middlewares/authMiddleware");
 
 const app = express();
+
+app.use(cors());
+
 app.use(bodyParser.json());
 
 app.use("/api/categories", authMiddleware, categoryRoutes);

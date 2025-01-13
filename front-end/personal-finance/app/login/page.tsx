@@ -82,7 +82,7 @@ export default function LoginPage() {
         </div>
 
         {/* Thông báo lỗi nếu có */}
-        {errorMessage && <p className="text-red-500 text-sm">{errorMessage}</p>}
+        {errorMessage && <p className="text-sm text-red-500">{errorMessage}</p>}
 
         <Button
           type="submit"
@@ -92,11 +92,11 @@ export default function LoginPage() {
           {isLoading ? "Logging in..." : "Login"}
         </Button>
 
-        <div className="text-center text-sm">
+        <div className="text-sm text-center">
           Don&apos;t have an account?{" "}
           <Link
             href="/signup"
-            className="text-violet-600 hover:text-violet-700 font-medium"
+            className="font-medium text-violet-600 hover:text-violet-700"
           >
             Create account
           </Link>

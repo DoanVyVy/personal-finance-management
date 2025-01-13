@@ -3,11 +3,12 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const sequelize = require("./config/db");
 const transactionRoutes = require("./routes/transactionRoutes");
+const cors = require("cors");
 const authMiddleware = require("./middlewares/authMiddleware");
 
 const app = express();
 app.use(bodyParser.json());
-
+app.use(cors());
 // Áp dụng authMiddleware cho toàn bộ /api/transactions
 app.use("/api/transactions", authMiddleware, transactionRoutes);
 

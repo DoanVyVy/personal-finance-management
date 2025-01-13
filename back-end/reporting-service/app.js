@@ -2,10 +2,13 @@ require("dotenv").config();
 const express = require("express");
 const bodyParser = require("body-parser");
 const sequelize = require("./config/db");
+const cors = require("cors");
 const authMiddleware = require("./middlewares/authMiddleware");
 const reportRoutes = require("./routes/reportRoutes");
 
 const app = express();
+
+app.use(cors());
 app.use(bodyParser.json());
 
 // Chặn tất cả route /api/reports bằng authMiddleware

@@ -1,7 +1,8 @@
-'use client'
+"use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Bar } from "react-chartjs-2"
+import { useEffect, useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Bar } from "react-chartjs-2";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -10,7 +11,8 @@ import {
   Title,
   Tooltip,
   Legend,
-} from 'chart.js'
+} from "chart.js";
+import axios from "axios";
 
 ChartJS.register(
   CategoryScale,
@@ -19,29 +21,7 @@ ChartJS.register(
   Title,
   Tooltip,
   Legend
-)
-
-const spendingData = {
-  labels: ['Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov'],
-  datasets: [
-    {
-      data: [30000, 35000, 32000, 38000, 28000, 36000],
-      backgroundColor: '#6C5DD3',
-      borderRadius: 8,
-    },
-  ],
-}
-
-const expenditureData = {
-  labels: ['Wordpress', 'Microsoft', 'Google Ads', 'LinkedIn', 'Apollo'],
-  datasets: [
-    {
-      data: [2000, 2500, 1800, 2200, 2400],
-      backgroundColor: '#6C5DD3',
-      borderRadius: 8,
-    },
-  ],
-}
+);
 
 const options = {
   responsive: true,
@@ -55,35 +35,116 @@ const options = {
       beginAtZero: true,
     },
   },
-}
+};
 
 export default function Charts() {
+  const [incomeData, setIncomeData] = useState<any>({
+    labels: [],
+    datasets: [],
+  });
+  const [expenseData, setExpenseData] = useState<any>({
+    labels: [],
+    datasets: [],
+  });
+
+  useEffect(() => {
+    const token = localStorage.getItem("accessToken");
+    if (!token) {
+      console.error("No token found. Please login.");
+      return;
+    }
+
+    async function fetchData() {
+      try {
+        // Fetch income and expense data
+        const response = await axios.get(
+          `http://localhost:3005/api/reports/income-expenses?timeUnit=monthly`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+
+        const monthlyData = response.data.data.groupedData;
+        let labels = Object.keys(monthlyData);
+
+        // Sort labels by month/year
+        labels.sort((a, b) => {
+          const dateA = new Date(`${a}-01`).getTime(); // Chuyển thành số milliseconds
+          const dateB = new Date(`${b}-01`).getTime(); // Chuyển thành số milliseconds
+          return dateA - dateB;
+        });
+
+        const incomeValues = labels.map((month) => monthlyData[month].income);
+        const expenseValues = labels.map((month) => monthlyData[month].expense);
+
+        // Set income data
+        setIncomeData({
+          labels,
+          datasets: [
+            {
+              data: incomeValues,
+              backgroundColor: "#6C5DD3",
+              borderRadius: 8,
+            },
+          ],
+        });
+
+        // Set expense data
+        setExpenseData({
+          labels,
+          datasets: [
+            {
+              data: expenseValues,
+              backgroundColor: "#FF6B6B",
+              borderRadius: 8,
+            },
+          ],
+        });
+      } catch (error) {
+        console.error("Error loading data:", error);
+      }
+    }
+
+    fetchData();
+  }, []);
+
   return (
     <div className="grid grid-cols-2 gap-6 mb-6">
       <Card>
         <CardHeader>
           <CardTitle className="text-lg font-medium">
-            Spending
-            <div className="text-2xl font-bold mt-1">₹ 48000/-</div>
+            Income
+            <div className="mt-1 text-2xl font-bold">
+              {" "}
+              {incomeData.datasets[0]?.data.reduce(
+                (a: number, b: number) => a + b,
+                0
+              ) || 0}
+            </div>
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <Bar data={spendingData} options={options} height={200} />
+          <Bar data={incomeData} options={options} height={200} />
         </CardContent>
       </Card>
-      
+
       <Card>
         <CardHeader>
           <CardTitle className="text-lg font-medium">
-            Expenditure
-            <div className="text-2xl font-bold mt-1">₹ 8000/-</div>
+            Expense
+            <div className="mt-1 text-2xl font-bold">
+              {" "}
+              {expenseData.datasets[0]?.data.reduce(
+                (a: number, b: number) => a + b,
+                0
+              ) || 0}
+            </div>
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <Bar data={expenditureData} options={options} height={200} />
+          <Bar data={expenseData} options={options} height={200} />
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }
-

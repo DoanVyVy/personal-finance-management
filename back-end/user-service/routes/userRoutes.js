@@ -1,14 +1,21 @@
 const express = require("express");
 const router = express.Router();
 const userController = require("../controllers/userController");
+const authMiddleware = require("../middlewares/authMiddleware");
 
-// Đăng ký
+// Signup
 router.post("/signup", userController.signup);
 
-// Đăng nhập
+// Login
 router.post("/login", userController.login);
 
-// Lấy 1 user theo ID (có thể public hoặc bắt token, tuỳ yêu cầu)
-router.get("/:id", userController.getUserById);
+// Lấy user theo id
+router.get("/:id", authMiddleware, userController.getUserById);
+
+// Cập nhật user (name, email, v.v.)
+router.put("/:id", authMiddleware, userController.updateUser);
+
+// Đổi mật khẩu
+router.patch("/:id/password", authMiddleware, userController.changePassword);
 
 module.exports = router;

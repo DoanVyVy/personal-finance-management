@@ -2,8 +2,7 @@
 
 import Layout from "@/components/layout";
 import Charts from "@/components/charts";
-import Reminders from "@/components/reminders";
-import Subscriptions from "@/components/subscriptions";
+import Budgets from "@/components/budgets";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -31,8 +30,7 @@ export default function DashboardPage() {
   return (
     <Layout>
       <Charts />
-      <Reminders />
-      <Subscriptions />
+      <Budgets />
     </Layout>
   );
 }
