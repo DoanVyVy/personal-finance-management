@@ -5,6 +5,7 @@ import axios from "axios";
 import { Button } from "@/components/ui/button";
 import { BellIcon } from "lucide-react";
 import Sidebar from "./sidebar";
+import { Toaster } from "react-hot-toast";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -72,6 +73,7 @@ export default function Layout({ children }: LayoutProps) {
             <BellIcon className="w-5 h-5" />
           </Button>
         </div>
+        <Toaster position="top-right" reverseOrder={false} />
         {children}
       </main>
     </div>

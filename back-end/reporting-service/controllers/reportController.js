@@ -43,7 +43,7 @@ const groupTransactionsByTime = (transactions, timeUnit) => {
 exports.getIncomeExpensesReport = async (req, res) => {
   try {
     const { userId } = req.user;
-    const { timeUnit = "monthly" } = req.query; // "monthly", "quarterly", "yearly"
+    const { timeUnit = "monthly" } = req.query;
 
     const response = await axios.get(
       `${TRANSACTION_SERVICE_URL}/api/transactions`,

@@ -25,6 +25,10 @@ const Transaction = sequelize.define(
     note: {
       type: DataTypes.TEXT,
     },
+    category_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true, // hoặc false nếu bắt buộc
+    },
   },
   {
     tableName: "transactions",

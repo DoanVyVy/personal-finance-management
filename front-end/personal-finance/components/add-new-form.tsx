@@ -6,13 +6,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { FinanceTags } from "./finance-tags";
 import { DollarSign, ShoppingCart, Plus } from "lucide-react";
 import {
@@ -24,6 +17,15 @@ import {
 } from "@/components/ui/dialog";
 import axios from "axios";
 import toast from "react-hot-toast";
+
+interface Budget {
+  id: number;
+  category_id: number;
+  limit_amount: number;
+  start_date: string;
+  end_date: string;
+  spent?: number;
+}
 
 const financeTags = [
   { id: "income", name: "Income", icon: <DollarSign className="w-4 h-4" /> },
@@ -37,17 +39,31 @@ const financeTags = [
 export default function AddNewForm() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [selectedTag, setSelectedTag] = useState<string | null>(null);
-  const [selectedCategory, setSelectedCategory] = useState<string | undefined>(
-    undefined
-  );
 
+  const [selectedTag, setSelectedTag] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [categories, setCategories] = useState<any[]>([]);
+  const [budgets, setBudgets] = useState<Budget[]>([]); // Khai báo state budgets
   const [newCategoryName, setNewCategoryName] = useState("");
-  const [newCategoryType, setNewCategoryType] = useState<string | null>(null);
   const [isAddingCategory, setIsAddingCategory] = useState(false);
 
-  // Load categories từ API dựa vào loại (income/expense)
+  // Lấy danh sách budgets khi component khởi tạo
+  useEffect(() => {
+    const token = localStorage.getItem("accessToken");
+    if (!token) return;
+    axios
+      .get(`http://localhost:3004/api/budgets`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((response) => {
+        setBudgets(response.data);
+      })
+      .catch((error) => {
+        console.error("Error fetching budgets:", error);
+      });
+  }, []);
+
+  // Lấy danh sách categories theo type (income/expense)
   useEffect(() => {
     if (selectedTag) {
       const token = localStorage.getItem("accessToken");
@@ -60,12 +76,17 @@ export default function AddNewForm() {
         try {
           const response = await axios.get(
             `http://localhost:3003/api/categories/by-type?type=${selectedTag}`,
-            {
-              headers: { Authorization: `Bearer ${token}` },
-            }
+            { headers: { Authorization: `Bearer ${token}` } }
           );
-          setCategories(response.data.data || []);
-          setSelectedCategory(undefined); // Reset selectedCategory khi thay đổi selectedTag
+          const fetchedCategories = response.data.data || [];
+          setCategories(fetchedCategories);
+
+          // Reset hoặc đặt default category nếu có
+          if (fetchedCategories.length > 0) {
+            setSelectedCategory(fetchedCategories[0].id);
+          } else {
+            setSelectedCategory("");
+          }
         } catch (error) {
           toast.error("Error loading categories.");
         }
@@ -83,18 +104,30 @@ export default function AddNewForm() {
       const token = localStorage.getItem("accessToken");
       if (!token) {
         toast.error("No token found. Please login.");
+        setLoading(false);
         return;
       }
 
       const formData = new FormData(event.currentTarget);
+
+      // Kiểm tra category_id trước khi gửi
+      if (!selectedCategory) {
+        toast.error("Please select a category.");
+        setLoading(false);
+        return;
+      }
+
       const transactionData = {
         category_id: selectedCategory,
         amount: parseFloat(formData.get("amount") as string),
         date: formData.get("date"),
-        description: formData.get("description"),
+        note: formData.get("description"),
         type: selectedTag,
       };
 
+      console.log("Submitting transaction:", transactionData); // Debug log
+
+      // Gửi yêu cầu POST thêm giao dịch mới
       await axios.post(
         `http://localhost:3002/api/transactions`,
         transactionData,
@@ -104,17 +137,56 @@ export default function AddNewForm() {
       );
 
       toast.success("Transaction added successfully!");
+
+      // Tìm budget tương ứng với category_id
+      const matchingBudget = budgets.find(
+        (b) => b.category_id === Number(selectedCategory)
+      );
+
+      // Nếu tìm thấy budget, cập nhật spent
+      if (matchingBudget) {
+        const updatedSpent =
+          (matchingBudget.spent || 0) + transactionData.amount;
+        // Gửi yêu cầu PUT để cập nhật budget
+        await axios.put(
+          `http://localhost:3004/api/budgets/${matchingBudget.id}`,
+          {
+            category: matchingBudget.category_id,
+            limit_amount: matchingBudget.limit_amount,
+            start_date: matchingBudget.start_date,
+            end_date: matchingBudget.end_date,
+            spent: updatedSpent,
+          },
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+
+        // Cập nhật lại danh sách budgets trong state nếu cần
+        setBudgets((prevBudgets) =>
+          prevBudgets.map((b) =>
+            b.id === matchingBudget.id ? { ...b, spent: updatedSpent } : b
+          )
+        );
+      }
+
       setLoading(false);
-      router.push("/dashboard");
+      router.push("/transactions");
     } catch (error) {
+      console.error(error);
       toast.error("Error adding transaction.");
       setLoading(false);
     }
   };
 
   const handleAddCategory = async () => {
-    if (!newCategoryName.trim() || !newCategoryType) {
-      toast.error("Please provide a category name and select a type.");
+    if (!newCategoryName.trim()) {
+      toast.error("Please provide a category name.");
+      return;
+    }
+
+    if (!selectedTag) {
+      toast.error("Please select 'Income' or 'Expense' first!");
       return;
     }
 
@@ -127,15 +199,12 @@ export default function AddNewForm() {
     try {
       const response = await axios.post(
         `http://localhost:3003/api/categories`,
-        { name: newCategoryName.trim(), type: newCategoryType },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        { name: newCategoryName.trim(), type: selectedTag },
+        { headers: { Authorization: `Bearer ${token}` } }
       );
 
       setCategories((prev) => [...prev, response.data.data]);
       setNewCategoryName("");
-      setNewCategoryType(null);
       setIsAddingCategory(false);
       toast.success("Category added successfully!");
     } catch (error) {
@@ -144,28 +213,34 @@ export default function AddNewForm() {
   };
 
   const renderForm = () => {
+    // Lấy ngày hôm nay dưới dạng YYYY-MM-DD
+    const today = new Date().toISOString().split("T")[0];
+
     return (
       <>
         <div className="space-y-2">
           <Label htmlFor="category">Category</Label>
-          <Select
+          <select
+            id="category"
             name="category"
             required
             value={selectedCategory}
-            onValueChange={(value) => setSelectedCategory(value)}
+            onChange={(e) => setSelectedCategory(e.target.value)}
+            className="w-full px-3 py-2 border rounded"
           >
-            <SelectTrigger id="category">
-              <SelectValue placeholder="Select category" />
-            </SelectTrigger>
-            <SelectContent>
-              {categories.map((category) => (
-                <SelectItem key={category.id} value={category.id}>
-                  {category.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            {categories.length === 0 && (
+              <option value="" disabled>
+                No categories available
+              </option>
+            )}
+            {categories.map((cat) => (
+              <option key={cat.id} value={cat.id}>
+                {cat.name}
+              </option>
+            ))}
+          </select>
         </div>
+
         <div className="space-y-2">
           <Label htmlFor="amount">Amount</Label>
           <Input
@@ -176,10 +251,18 @@ export default function AddNewForm() {
             required
           />
         </div>
+
         <div className="space-y-2">
           <Label htmlFor="date">Date</Label>
-          <Input id="date" name="date" type="date" required />
+          <Input
+            id="date"
+            name="date"
+            type="date"
+            required
+            defaultValue={today} // Thiết lập ngày mặc định là hôm nay
+          />
         </div>
+
         <div className="space-y-2">
           <Label htmlFor="description">Description</Label>
           <Input
@@ -202,10 +285,12 @@ export default function AddNewForm() {
             onSelectTag={setSelectedTag}
           />
         </div>
+
         {selectedTag && (
           <form onSubmit={handleSubmit}>
             <div className="space-y-4">
               {renderForm()}
+
               <Dialog
                 open={isAddingCategory}
                 onOpenChange={setIsAddingCategory}
@@ -220,23 +305,6 @@ export default function AddNewForm() {
                     <DialogTitle>Add New Category</DialogTitle>
                   </DialogHeader>
                   <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="newCategoryType">Type</Label>
-                      <Select
-                        name="newCategoryType"
-                        required
-                        value={newCategoryType || ""}
-                        onValueChange={(value) => setNewCategoryType(value)}
-                      >
-                        <SelectTrigger id="newCategoryType">
-                          <SelectValue placeholder="Select type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="income">Income</SelectItem>
-                          <SelectItem value="expense">Expense</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
                     <div className="space-y-2">
                       <Label htmlFor="newCategoryName">Category Name</Label>
                       <Input
@@ -253,6 +321,7 @@ export default function AddNewForm() {
                 </DialogContent>
               </Dialog>
             </div>
+
             <Button type="submit" className="w-full mt-6" disabled={loading}>
               {loading ? "Adding..." : "Add Transaction"}
             </Button>

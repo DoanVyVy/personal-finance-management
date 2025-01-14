@@ -4,13 +4,14 @@ const Transaction = require("../models/transactionModel");
 exports.createTransaction = async (req, res) => {
   try {
     const { userId } = req.user; // Lấy từ token
-    const { amount, type, note } = req.body;
-
+    const { amount, type, note, category_id } = req.body;
+    console.log(req.body);
     const newTransaction = await Transaction.create({
       user_id: userId,
       amount,
       type,
       note,
+      category_id, // Lưu category_id
     });
     return res.status(201).json(newTransaction);
   } catch (error) {
@@ -54,7 +55,7 @@ exports.updateTransaction = async (req, res) => {
   try {
     const { userId } = req.user;
     const { id } = req.params;
-    const { amount, type, note } = req.body;
+    const { amount, type, note, category_id } = req.body;
 
     const transaction = await Transaction.findOne({
       where: { id, user_id: userId },
@@ -63,9 +64,11 @@ exports.updateTransaction = async (req, res) => {
       return res.status(404).json({ error: "Transaction not found" });
     }
 
+    // Cập nhật các trường nếu có giá trị mới
     transaction.amount = amount ?? transaction.amount;
     transaction.type = type ?? transaction.type;
     transaction.note = note ?? transaction.note;
+    transaction.category_id = category_id ?? transaction.category_id;
 
     await transaction.save();
     return res.status(200).json(transaction);

@@ -21,6 +21,10 @@ const Budget = sequelize.define(
       type: DataTypes.DECIMAL(12, 2),
       allowNull: false,
     },
+    spent: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0,
+    },
     start_date: {
       type: DataTypes.DATEONLY,
       allowNull: false,

@@ -16,65 +16,65 @@ export default function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <div className="fixed left-0 top-0 bottom-0 w-64 border-r bg-white p-6 flex flex-col overflow-y-auto">
+    <div className="fixed top-0 bottom-0 left-0 flex flex-col w-64 p-6 overflow-y-auto bg-white border-r">
       <div className="flex items-center mb-8">
         <span className="text-xl font-bold">
-          Sub<span className="text-blue-600">Trackr</span>
+          Group<span className="text-blue-600"> 14</span>
         </span>
       </div>
 
-      <nav className="space-y-2 flex-grow overflow-y-auto">
+      <nav className="flex-grow space-y-2 overflow-y-auto">
         <Button
           variant={pathname === "/dashboard" ? "default" : "ghost"}
-          className="w-full justify-start"
+          className="justify-start w-full"
           asChild
         >
           <Link href="/dashboard">
-            <LayoutDashboard className="mr-2 h-4 w-4" />
+            <LayoutDashboard className="w-4 h-4 mr-2" />
             Dashboard
           </Link>
         </Button>
 
         <Button
           variant={pathname === "/add" ? "default" : "ghost"}
-          className="w-full justify-start"
+          className="justify-start w-full"
           asChild
         >
           <Link href="/add">
-            <PlusCircle className="mr-2 h-4 w-4" />
+            <PlusCircle className="w-4 h-4 mr-2" />
             Add new
           </Link>
         </Button>
 
         <Button
           variant={pathname === "/transactions" ? "default" : "ghost"}
-          className="w-full justify-start"
+          className="justify-start w-full"
           asChild
         >
           <Link href="/transactions">
-            <Receipt className="mr-2 h-4 w-4" />
+            <Receipt className="w-4 h-4 mr-2" />
             Transactions
           </Link>
         </Button>
 
         <Button
           variant={pathname === "/reports" ? "default" : "ghost"}
-          className="w-full justify-start"
+          className="justify-start w-full"
           asChild
         >
           <Link href="/reports">
-            <BarChart className="mr-2 h-4 w-4" />
+            <BarChart className="w-4 h-4 mr-2" />
             Reports
           </Link>
         </Button>
 
         <Button
           variant={pathname === "/account" ? "default" : "ghost"}
-          className="w-full justify-start"
+          className="justify-start w-full"
           asChild
         >
           <Link href="/account">
-            <User className="mr-2 h-4 w-4" />
+            <User className="w-4 h-4 mr-2" />
             Account
           </Link>
         </Button>

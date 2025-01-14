@@ -4,9 +4,12 @@ const bodyParser = require("body-parser");
 const sequelize = require("./config/db");
 const budgetRoutes = require("./routes/budgetRoutes");
 const authMiddleware = require("./middlewares/authMiddleware");
+const cors = require("cors");
 
 const app = express();
 app.use(bodyParser.json());
+
+app.use(cors());
 
 app.use("/api/budgets", authMiddleware, budgetRoutes);
 

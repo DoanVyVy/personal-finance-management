@@ -33,7 +33,7 @@ exports.getCategoriesByUserId = async (req, res) => {
     const { userId } = req.user; // Lấy userId từ middleware
 
     const categories = await Category.findAll({ where: { user_id: userId } });
-
+    console.log(categories);
     if (!categories || categories.length === 0) {
       return res.status(404).json({ message: "No categories found" });
     }
