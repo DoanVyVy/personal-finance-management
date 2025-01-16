@@ -47,12 +47,12 @@ export default function ExpenseCategoryChart() {
               const percent = ((params.value / totalExpense) * 100).toFixed(1);
               return `${
                 params.name
-              }<br/>Amount: $${params.value.toLocaleString()}<br/>Percentage: ${percent}%`;
+              }<br/>Amount: ${params.value.toLocaleString()}₫<br/>Percentage: ${percent}%`;
             },
           },
           legend: {
             orient: "vertical",
-            right: "5%", // Move legend further to the right
+            right: "5%",
             top: "middle",
             data: seriesData.map((item) => item.name),
             textStyle: {

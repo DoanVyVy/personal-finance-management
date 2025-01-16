@@ -119,9 +119,11 @@ export default function AddNewForm() {
 
       const transactionData = {
         category_id: selectedCategory,
-        amount: parseFloat(formData.get("amount") as string),
-        date: formData.get("date"),
-        note: formData.get("description"),
+        amount: parseFloat(
+          (formData.get("amount") ?? "0").toString().replace(/[^0-9]/g, "")
+        ),
+        date: (formData.get("date") ?? new Date().toISOString()).toString(),
+        note: (formData.get("description") ?? "").toString(),
         type: selectedTag,
       };
 
@@ -136,7 +138,13 @@ export default function AddNewForm() {
         }
       );
 
-      toast.success("Transaction added successfully!");
+      const formattedAmount = new Intl.NumberFormat("vi-VN", {
+        style: "currency",
+        currency: "VND",
+      }).format(transactionData.amount);
+      toast.success(
+        `Transaction added successfully! Amount: ${formattedAmount}`
+      );
 
       // Tìm budget tương ứng với category_id
       const matchingBudget = budgets.find(
@@ -242,13 +250,19 @@ export default function AddNewForm() {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="amount">Amount</Label>
+          <Label htmlFor="amount">Amount (VND)</Label>
           <Input
             id="amount"
             name="amount"
-            type="number"
+            type="text"
             placeholder="Enter amount"
             required
+            onChange={(e) => {
+              const value = e.target.value.replace(/[^0-9]/g, "");
+              e.target.value = new Intl.NumberFormat("vi-VN").format(
+                parseInt(value) || 0
+              );
+            }}
           />
         </div>
 

@@ -23,7 +23,7 @@ export default function IncomeExpenseChart({
 
     async function fetchReportData() {
       try {
-        setLoading(true); // Hiển thị trạng thái loading
+        setLoading(true);
         const response = await axios.get(
           `http://localhost:3005/api/reports/income-expenses?timeUnit=${timeUnit}`,
           {
@@ -38,7 +38,6 @@ export default function IncomeExpenseChart({
           return;
         }
 
-        // Trích xuất và sắp xếp nhãn
         const labels = Object.keys(data).sort((a, b) => {
           const dateA = new Date(
             timeUnit === "quarterly" ? a.replace("-Q", "-") : `${a}-01`
@@ -55,7 +54,6 @@ export default function IncomeExpenseChart({
           (label) => (data[label].income || 0) - (data[label].expense || 0)
         );
 
-        // Cấu hình biểu đồ
         const newOption = {
           tooltip: {
             trigger: "axis",
@@ -87,7 +85,7 @@ export default function IncomeExpenseChart({
               axisLabel: {
                 formatter: (value: string) => {
                   if (timeUnit === "quarterly") {
-                    return value.replace("-Q", " Q"); // Định dạng "YYYY-Q1" thành "YYYY Q1"
+                    return value.replace("-Q", " Q");
                   }
                   return value;
                 },
@@ -99,7 +97,8 @@ export default function IncomeExpenseChart({
               type: "value",
               name: "Amount",
               axisLabel: {
-                formatter: "${value}",
+                // Thay đổi định dạng từ $ sang VND
+                formatter: (value: number) => `${value}₫`,
               },
             },
           ],
@@ -126,12 +125,12 @@ export default function IncomeExpenseChart({
       } catch (error) {
         console.error("Error fetching report data:", error);
       } finally {
-        setLoading(false); // Kết thúc trạng thái loading
+        setLoading(false);
       }
     }
 
     fetchReportData();
-  }, [timeUnit]); // Reload dữ liệu khi `timeUnit` thay đổi
+  }, [timeUnit]);
 
   if (loading) {
     return <div>Loading chart data...</div>;

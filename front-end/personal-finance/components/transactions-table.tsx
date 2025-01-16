@@ -168,7 +168,7 @@ export default function TransactionsTable() {
 
     const updatedTx = {
       note: editNote,
-      amount: parseFloat(editAmount),
+      amount: parseFloat(editAmount.replace(/[^0-9]/g, "")),
       type: editType,
       category_id: editCategory ? parseInt(editCategory) : null,
     };
@@ -273,20 +273,6 @@ export default function TransactionsTable() {
               <SelectItem value="expense">Expense</SelectItem>
             </SelectContent>
           </Select>
-
-          <Select value={filterCategory} onValueChange={setFilterCategory}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Filter by category" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Categories</SelectItem>
-              {categories.map((category) => (
-                <SelectItem key={category.id} value={String(category.id)}>
-                  {category.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
         </div>
       </div>
 
@@ -362,7 +348,10 @@ export default function TransactionsTable() {
                         : "text-red-600"
                     }`}
                   >
-                    ${Math.abs(transaction.amount).toFixed(2)}
+                    {new Intl.NumberFormat("vi-VN", {
+                      style: "currency",
+                      currency: "VND",
+                    }).format(Math.abs(transaction.amount))}
                   </TableCell>
                   <TableCell className="pl-4">{transaction.type}</TableCell>
                 </TableRow>
@@ -399,11 +388,18 @@ export default function TransactionsTable() {
               </label>
 
               <label className="flex flex-col space-y-1">
-                <span className="text-sm font-medium">Amount</span>
+                <span className="text-sm font-medium">Amount (VND)</span>
                 <Input
-                  type="number"
+                  type="text"
                   value={editAmount}
-                  onChange={(e) => setEditAmount(e.target.value)}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/[^0-9]/g, "");
+                    setEditAmount(
+                      new Intl.NumberFormat("vi-VN").format(
+                        parseInt(value) || 0
+                      )
+                    );
+                  }}
                 />
               </label>
 
@@ -416,25 +412,6 @@ export default function TransactionsTable() {
                   <SelectContent>
                     <SelectItem value="income">Income</SelectItem>
                     <SelectItem value="expense">Expense</SelectItem>
-                  </SelectContent>
-                </Select>
-              </label>
-
-              <label className="flex flex-col space-y-1">
-                <span className="text-sm font-medium">Category</span>
-                <Select
-                  value={editCategory || ""}
-                  onValueChange={(val) => setEditCategory(val)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {categories.map((cat) => (
-                      <SelectItem key={cat.id} value={String(cat.id)}>
-                        {cat.name}
-                      </SelectItem>
-                    ))}
                   </SelectContent>
                 </Select>
               </label>

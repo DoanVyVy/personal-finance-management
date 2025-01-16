@@ -15,7 +15,6 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
-import axios from "axios";
 
 export function LogoutDialog() {
   const router = useRouter();
@@ -50,9 +49,9 @@ export function LogoutDialog() {
       <AlertDialogTrigger asChild>
         <Button
           variant="ghost"
-          className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-50"
+          className="justify-start w-full text-red-500 hover:text-red-600 hover:bg-red-50"
         >
-          <LogOut className="mr-2 h-4 w-4" />
+          <LogOut className="w-4 h-4 mr-2" />
           Log out
         </Button>
       </AlertDialogTrigger>

@@ -26,8 +26,6 @@ export default function LoginPage() {
     const password = formData.get("password") as string;
 
     try {
-      // Gọi sang User Service (ví dụ: http://localhost:3001/api/users/login)
-      // Đảm bảo URL này đúng với backend của bạn.
       const response = await axios.post(
         "http://localhost:3001/api/users/login",
         {

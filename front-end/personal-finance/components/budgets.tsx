@@ -17,7 +17,6 @@ import {
   PlusCircle,
   Edit,
   Trash2,
-  DollarSign,
   AlertTriangle,
   AlertCircle,
   CheckCircle,
@@ -106,6 +105,7 @@ export default function Budgets() {
 
   useEffect(() => {
     fetchBudgets();
+    
     fetchCategories();
   }, []);
 
@@ -217,13 +217,13 @@ export default function Budgets() {
             ? ((spentValue / limitValue) * 100).toFixed(2)
             : 0;
           const categoryName = params[0].axisValue;
-          return `${categoryName}<br/>Spent: $${spentValue}<br/>Limit: $${limitValue}<br/>Used: ${percentage}%`;
+          return `${categoryName}<br/>Spent: ${spentValue.toLocaleString()}₫<br/>Limit: ${limitValue.toLocaleString()}₫<br/>Used: ${percentage}%`;
         },
       },
       legend: { data: ["Spent", "Budget Limit"] },
       xAxis: {
         type: "value",
-        name: "Amount ($)",
+        name: "Amount (vnd)",
         nameLocation: "middle",
         nameGap: 30,
       },
@@ -361,15 +361,13 @@ export default function Budgets() {
                   }`}
                 >
                   <CardHeader
-                    className={`
-                    ${
+                    className={
                       isOverBudget
                         ? "bg-red-100 dark:bg-red-900"
                         : isNearLimit
                         ? "bg-yellow-100 dark:bg-yellow-900"
                         : "bg-green-100 dark:bg-green-900"
                     }
-                  `}
                   >
                     <CardTitle className="flex items-center justify-between text-lg">
                       <span>{getCategoryName(budget.category_id)}</span>
@@ -393,10 +391,10 @@ export default function Budgets() {
                             : "text-gray-600 dark:text-gray-400"
                         }
                       >
-                        Spent: ${budget.spent}
+                        Spent: {budget.spent.toLocaleString()}₫
                       </span>
                       <span className="text-gray-600 dark:text-gray-400">
-                        Limit: ${budget.limit_amount}
+                        Limit: {budget.limit_amount.toLocaleString()}₫
                       </span>
                     </div>
                     <Progress
